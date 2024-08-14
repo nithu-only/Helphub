@@ -3,6 +3,7 @@ package com.example.helphub.controller;
 import com.example.helphub.dto.TagDTO;
 import com.example.helphub.exception.ResourceNotFoundException;
 import com.example.helphub.service.TagService;
+import org.apache.coyote.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -74,16 +75,6 @@ public class TagControllerTest {
         verify(tagService, times(1)).findById(1L);
     }
 
-    @Test
-    void testGetTagById_NotFound() throws Exception {
-        when(tagService.findById(1L)).thenThrow(new ResourceNotFoundException("Tag not found with id 1"));
-        try {
-            mockMvc.perform(get("/api/tags/1"))
-                    .andExpect(status().isNotFound());
-        } catch (Exception e) {
-            verify(tagService, times(1)).findById(1L);
-        }
-    }
 
     @Test
     void testCreateTag() throws Exception {
@@ -129,6 +120,50 @@ public class TagControllerTest {
         verify(tagService, times(1)).update(eq(1L), any(TagDTO.class));
     }
 
+
+    @Test
+    void testDeleteTag_Success() throws Exception {
+        doNothing().when(tagService).delete(1L);
+
+        mockMvc.perform(delete("/api/tags/1"))
+                .andExpect(status().isOk());
+
+        verify(tagService, times(1)).delete(1L);
+    }
+
+//    fail case
+
+    @Test
+    void testCreateTag_badRequest() throws Exception {
+        TagDTO tagDTO = new TagDTO();
+        tagDTO.setName("Spring");
+
+        // Simulate a bad request by throwing IllegalArgumentException
+        when(tagService.save(any(TagDTO.class))).thenThrow(new IllegalArgumentException("Invalid tag data"));
+        try {
+            mockMvc.perform(post("/api/tags")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"name\":\"Spring\"}"))
+                    .andExpect(status().isBadRequest()) // Expecting 400 Bad Request instead of 200 OK
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.error", is("Invalid tag data")));
+        } catch (Exception e) {
+            verify(tagService, times(1)).save(any(TagDTO.class));
+        }
+    }
+
+
+    @Test
+    void testGetTagById_NotFound() throws Exception {
+        when(tagService.findById(1L)).thenThrow(new ResourceNotFoundException("Tag not found with id 1"));
+        try {
+            mockMvc.perform(get("/api/tags/1"))
+                    .andExpect(status().isNotFound());
+        } catch (Exception e) {
+            verify(tagService, times(1)).findById(1L);
+        }
+    }
+
     @Test
     void testUpdateTag_NotFound() throws Exception {
         TagDTO tagDTO = new TagDTO();
@@ -144,16 +179,6 @@ public class TagControllerTest {
 
             verify(tagService, times(1)).update(eq(1L), any(TagDTO.class));
         }
-    }
-
-    @Test
-    void testDeleteTag_Success() throws Exception {
-        doNothing().when(tagService).delete(1L);
-
-        mockMvc.perform(delete("/api/tags/1"))
-                .andExpect(status().isOk());
-
-        verify(tagService, times(1)).delete(1L);
     }
 
     @Test

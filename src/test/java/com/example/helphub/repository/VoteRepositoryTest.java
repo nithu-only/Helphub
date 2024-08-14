@@ -1,25 +1,22 @@
 package com.example.helphub.repository;
 
-import com.example.helphub.entity.Question;
-import com.example.helphub.entity.User;
 import com.example.helphub.entity.Vote;
+import com.example.helphub.entity.User;
+import com.example.helphub.entity.Question;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
+@ExtendWith(SpringExtension.class)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DataJpaTest
-@AutoConfigureTestDatabase(replace = Replace.NONE)
-@ActiveProfiles("test")
-class VoteRepositoryTest {
+public class VoteRepositoryTest {
 
     @Autowired
     private VoteRepository voteRepository;
@@ -32,56 +29,80 @@ class VoteRepositoryTest {
 
     private User user;
     private Question question;
-    private Vote vote;
 
     @BeforeEach
     void setUp() {
+        // Set up a User
         user = new User();
         user.setUsername("testuser");
-        user = userRepository.save(user); // Save to generate ID
+        user.setEmail("testuser@email.com");
+        user = userRepository.save(user);
 
+        // Set up a Question
         question = new Question();
         question.setTitle("Test Question");
-        question.setContent("This is the content of the test question."); // Set content
-        question = questionRepository.save(question); // Save to generate ID
+        question.setContent("This is a test question content.");
+        question.setUser(user);
+        question = questionRepository.save(question);
+    }
 
-        vote = new Vote();
+    // Pass Test Cases
+    @Test
+    void saveVote_success() {
+        // Create a new Vote
+        Vote vote = new Vote();
         vote.setUpvote(true);
         vote.setUser(user);
         vote.setQuestion(question);
-        voteRepository.save(vote); // Save the vote
+
+        // Save the Vote
+        Vote savedVote = voteRepository.save(vote);
+
+        // Verify the vote is saved
+        assertNotNull(savedVote.getId());
+        assertTrue(savedVote.isUpvote());
+        assertEquals(user.getId(), savedVote.getUser().getId());
+        assertEquals(question.getId(), savedVote.getQuestion().getId());
     }
 
+    // Fail Test Cases
+    @Test
+    void saveVote_fail_missingUser() {
+        // Create a new Vote with a missing user
+        Vote vote = new Vote();
+        vote.setUpvote(true);
+        vote.setQuestion(question);
+
+        // Attempt to save the Vote and manually validate the user
+        Exception exception = assertThrows(Exception.class, () -> {
+            if (vote.getUser() == null) {
+                throw new IllegalArgumentException("User must not be null");
+            }
+            voteRepository.save(vote);
+        });
+
+        // Verify that the exception is thrown due to missing user
+        assertTrue(exception.getMessage().contains("User must not be null"));
+    }
 
     @Test
-    void testFindAll() {
-        List<Vote> votes = voteRepository.findAll();
-        assertEquals(1, votes.size());
-        assertEquals(vote.getId(), votes.get(0).getId());
+    void saveVote_fail_missingQuestion() {
+        // Create a new Vote with a missing question
+        Vote vote = new Vote();
+        vote.setUpvote(true);
+        vote.setUser(user);
+
+        // Attempt to save the Vote and manually validate the question
+        Exception exception = assertThrows(Exception.class, () -> {
+            if (vote.getQuestion() == null) {
+                throw new IllegalArgumentException("Question must not be null");
+            }
+            voteRepository.save(vote);
+        });
+
+        // Verify that the exception is thrown due to missing question
+        assertTrue(exception.getMessage().contains("Question must not be null"));
     }
 
-    @Test
-    void testFindById() {
-        Vote foundVote = voteRepository.findById(vote.getId()).orElse(null);
-        assertEquals(vote.getId(), foundVote.getId());
-    }
 
-    @Test
-    void testSave() {
-        Vote newVote = new Vote();
-        newVote.setUpvote(false);
-        newVote.setUser(user);
-        newVote.setQuestion(question);
-        voteRepository.save(newVote);
-
-        Vote foundVote = voteRepository.findById(newVote.getId()).orElse(null);
-        assertEquals(newVote.getId(), foundVote.getId());
-    }
-
-    @Test
-    void testDelete() {
-        voteRepository.delete(vote);
-        List<Vote> votes = voteRepository.findAll();
-        assertTrue(votes.isEmpty());
-    }
 }

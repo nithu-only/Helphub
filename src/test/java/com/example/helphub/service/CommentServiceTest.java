@@ -1,5 +1,6 @@
 package com.example.helphub.service;
 
+import com.example.helphub.dto.AnswerDTO;
 import com.example.helphub.dto.CommentDTO;
 import com.example.helphub.exception.ResourceNotFoundException;
 import com.example.helphub.entity.Comment;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.BeanUtils;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -55,6 +57,12 @@ public class CommentServiceTest {
         comment.setUser(user);
         comment.setAnswer(answer);
         comment.setCreatedAt(LocalDateTime.now());
+
+
+        CommentDTO commentDto = new CommentDTO();
+        BeanUtils.copyProperties(comment,commentDto);
+        commentDto.setId(user.getId());
+        commentDto.setAnswerId(comment.getId());
     }
 
     @Test
@@ -114,16 +122,28 @@ public class CommentServiceTest {
 
     @Test
     public void testUpdateCommentSuccess() {
+        // Mock the repository findById method
         when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
 
+        // Prepare the CommentDTO with updated content
         CommentDTO commentDTO = new CommentDTO();
         commentDTO.setContent("Updated comment");
 
+        // Mock the repository save method
+        Comment updatedCommentEntity = new Comment();
+        updatedCommentEntity.setId(1L);
+        updatedCommentEntity.setContent("Updated comment");
+        when(commentRepository.save(any(Comment.class))).thenReturn(updatedCommentEntity);
+
+        // Call the service update method
         CommentDTO updatedComment = commentService.update(1L, commentDTO);
 
+        // Assert the result
         assertEquals("Updated comment", updatedComment.getContent());
         verify(commentRepository, times(1)).save(any(Comment.class));
     }
+
+
 
     @Test
     public void testUpdateCommentNotFound() {

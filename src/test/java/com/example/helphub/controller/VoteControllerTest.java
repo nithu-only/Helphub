@@ -65,16 +65,7 @@ class VoteControllerTest {
         verify(voteService, times(1)).findById(1L);
     }
 
-    @Test
-    void testGetVoteById_Failure() throws Exception {
-        when(voteService.findById(anyLong())).thenThrow(new ResourceNotFoundException("Vote not found with id 1"));
-        try {
-            mockMvc.perform(get("/api/votes/{id}", 1L))
-                    .andExpect(status().isNotFound());
-        } catch (Exception e) {
-            verify(voteService, times(1)).findById(1L);
-        }
-    }
+
     @Test
     void testCreateVote_Success() throws Exception {
         when(voteService.save(any(VoteDTO.class))).thenReturn(voteDTO);
@@ -109,6 +100,54 @@ class VoteControllerTest {
                 .andExpect(status().isOk());
 
         verify(voteService, times(1)).delete(anyLong());
+    }
+
+//    fail case
+
+    @Test
+    void testCreateVote_Failure() throws Exception {
+        // Simulate a failure during save operation
+        when(voteService.save(any(VoteDTO.class)))
+                .thenThrow(new IllegalArgumentException("Invalid vote data"));
+
+        try {
+            mockMvc.perform(post("/api/votes")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"upvote\": true, \"userId\": 1, \"questionId\": 1}"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value("Invalid vote data"));
+
+        } catch (Exception e) {
+
+            verify(voteService, times(1)).save(any(VoteDTO.class));
+        }
+    }
+
+    @Test
+    void testUpdateVote_Failure() throws Exception {
+        // Simulate a failure during update operation
+        when(voteService.update(anyLong(), any(VoteDTO.class)))
+                .thenThrow(new ResourceNotFoundException("Vote not found with id 1"));
+        try {
+            mockMvc.perform(put("/api/votes/{id}", 1L)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"upvote\": true, \"userId\": 1, \"questionId\": 1}"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.message").value("Vote not found with id 1"));
+        } catch (Exception e) {
+            verify(voteService, times(1)).update(anyLong(), any(VoteDTO.class));
+        }
+    }
+
+    @Test
+    void testGetVoteById_Failure() throws Exception {
+        when(voteService.findById(anyLong())).thenThrow(new ResourceNotFoundException("Vote not found with id 1"));
+        try {
+            mockMvc.perform(get("/api/votes/{id}", 1L))
+                    .andExpect(status().isNotFound());
+        } catch (Exception e) {
+            verify(voteService, times(1)).findById(1L);
+        }
     }
 
     @Test

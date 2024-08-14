@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -85,4 +86,64 @@ public class CommentControllerTest {
 
         verify(commentService, times(1)).delete(1L);
     }
+
+    //failure
+
+    @Test
+    public void testCreateCommentFailure() {
+        when(commentService.save(any(CommentDTO.class)))
+                .thenThrow(new IllegalArgumentException("Invalid comment data"));
+
+        // Act
+        ResponseEntity<CommentDTO> response = commentController.createComment(commentDTO);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    public void testGetAllCommentsFailure() {
+        when(commentService.findAll()).thenReturn(Collections.emptyList());
+
+        // Act
+        List<CommentDTO> comments = commentController.getAllComments();
+
+        // Assert
+        assertTrue(comments.isEmpty());
+    }
+
+    @Test
+    public void testGetCommentByIdFailure() {
+        when(commentService.findById(1L)).thenReturn(null);
+
+        // Act
+        CommentDTO foundComment = commentController.getCommentById(1L);
+
+        // Assert
+        assertNull(foundComment);
+    }
+
+    @Test
+    public void testUpdateCommentFailure() {
+        when(commentService.update(eq(1L), any(CommentDTO.class))).thenReturn(null);
+
+        // Act
+        CommentDTO updatedComment = commentController.updateComment(1L, commentDTO);
+
+        // Assert
+        assertNull(updatedComment);
+    }
+
+    @Test
+    public void testDeleteCommentFailure() {
+        doThrow(new IllegalArgumentException("Comment not found")).when(commentService).delete(1L);
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            commentController.deleteComment(1L);
+        });
+    }
+
+
+
 }

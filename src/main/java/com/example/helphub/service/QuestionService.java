@@ -44,7 +44,7 @@ public class QuestionService {
     public QuestionDTO save(QuestionDTO questionDTO) {
         User user = userRepository.findById(questionDTO.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + questionDTO.getUserId()));
-
+        System.out.println("asldflakjsdflkajsdlfkjaslkdfjalsfkdjldksjldfjl"+user);
         Question question = new Question();
         BeanUtils.copyProperties(questionDTO, question);
         question.setUser(user);

@@ -3,6 +3,7 @@ package com.example.helphub.controller;
 import com.example.helphub.dto.CommentDTO;
 import com.example.helphub.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,9 +33,13 @@ public class CommentController {
     }
 
     @PostMapping
-    public ResponseEntity<CommentDTO> createComment(@Valid @RequestBody CommentDTO commentDTO) {
-        CommentDTO commentDTO1 = commentService.save(commentDTO);
-        return ResponseEntity.ok(commentDTO1);
+    public ResponseEntity<CommentDTO> createComment(@RequestBody CommentDTO commentDTO) {
+        try {
+            CommentDTO savedComment = commentService.save(commentDTO);
+            return new ResponseEntity<>(savedComment, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PutMapping("/{id}")

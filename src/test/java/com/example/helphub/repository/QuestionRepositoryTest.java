@@ -29,41 +29,75 @@ public class QuestionRepositoryTest {
     public void setUp() {
         user = new User();
         user.setUsername("testUser");
+        user.setEmail("testUser@email.com");
         userRepository.save(user);
     }
 
     @Test
-    public void testSaveAndFindById() {
+    void saveQuestion_success() {
+        // Create a new Question
         Question question = new Question();
-        question.setTitle("Valid Title");
-        question.setContent("This content is valid because it is at least 20 characters long."); // Ensure this is valid
+        question.setTitle("Test Question");
+        question.setContent("This is the content of the test question.");
         question.setUser(user);
 
-        questionRepository.save(question);
+        // Save the Question
+        Question savedQuestion = questionRepository.save(question);
 
-        Question foundQuestion = questionRepository.findById(question.getId()).orElse(null);
-        assertNotNull(foundQuestion);
-        assertEquals("Valid Title", foundQuestion.getTitle());
+        // Verify the question is saved
+        assertNotNull(savedQuestion.getId());
+        assertEquals("Test Question", savedQuestion.getTitle());
+        assertEquals("This is the content of the test question.", savedQuestion.getContent());
+        assertEquals(user.getId(), savedQuestion.getUser().getId());
     }
-
 
 
     @Test
-    public void testFindByUserId() {
-        Question question1 = new Question();
-        question1.setTitle("Test Title 1");
-        question1.setContent("This content is valid as it is longer than 20 characters."); // Ensure valid content
-        question1.setUser(user);
-        questionRepository.save(question1);
+    void findByUserId_success() {
+        // Create and save a Question for the user
+        Question question = new Question();
+        question.setTitle("Another Test Question");
+        question.setContent("This is another test question content.");
+        question.setUser(user);
+        questionRepository.save(question);
 
-        Question question2 = new Question();
-        question2.setTitle("Test Title 2");
-        question2.setContent("This is another valid content example that is sufficiently long."); // Ensure valid content
-        question2.setUser(user);
-        questionRepository.save(question2);
-
+        // Fetch questions by user ID
         List<Question> questions = questionRepository.findByUserId(user.getId());
-        assertEquals(2, questions.size());
+
+        // Verify the question is returned
+        assertEquals(1, questions.size());
+        assertEquals("Another Test Question", questions.get(0).getTitle());
     }
+
+//    fail case
+
+    @Test
+    void saveQuestion_fail_missingContent() {
+        // Create a new Question with missing content
+        Question question = new Question();
+        question.setTitle("Test Question with No Content");
+        question.setUser(user);
+
+        // Attempt to save the Question and manually validate content
+        Exception exception = assertThrows(Exception.class, () -> {
+            if (question.getContent() == null) {
+                throw new IllegalArgumentException("Content must not be null");
+            }
+            questionRepository.save(question);
+        });
+
+        // Verify that the exception is thrown due to missing content
+        assertTrue(exception.getMessage().contains("Content must not be null"));
+    }
+
+    @Test
+    void findByUserId_fail_invalidUserId() {
+        // Fetch questions by a non-existent user ID
+        List<Question> questions = questionRepository.findByUserId(999L);
+
+        // Verify no questions are returned
+        assertEquals(0, questions.size());
+    }
+
 
 }

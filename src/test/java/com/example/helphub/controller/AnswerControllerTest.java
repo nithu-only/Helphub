@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
@@ -91,4 +92,59 @@ public class AnswerControllerTest {
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         verify(answerService, times(1)).delete(anyLong());
     }
+
+    //fail
+
+    @Test
+    void getAllAnswers_noContent() {
+        when(answerService.findAll()).thenReturn(Collections.emptyList());
+
+        ResponseEntity<List<AnswerDTO>> response = answerController.getAllAnswers();
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertNull(response.getBody());  // Check that the body is null when status is 204
+        verify(answerService, times(1)).findAll();
+    }
+
+
+    @Test
+    void getAnswerById_notFound() {
+        when(answerService.findById(anyLong())).thenReturn(null);
+
+        ResponseEntity<AnswerDTO> response = answerController.getAnswerById(1L);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(answerService, times(1)).findById(anyLong());
+    }
+
+    @Test
+    void createAnswer_badRequest() {
+        when(answerService.save(any(AnswerDTO.class))).thenThrow(new IllegalArgumentException("Invalid data"));
+
+        ResponseEntity<AnswerDTO> response = answerController.createAnswer(answerDTO);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(answerService, times(1)).save(any(AnswerDTO.class));
+    }
+
+    @Test
+    void updateAnswer_notFound() {
+        when(answerService.update(anyLong(), any(AnswerDTO.class))).thenReturn(null);
+
+        ResponseEntity<AnswerDTO> response = answerController.updateAnswer(1L, answerDTO);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(answerService, times(1)).update(anyLong(), any(AnswerDTO.class));
+    }
+
+    @Test
+    void deleteAnswer_notFound() {
+        doThrow(new IllegalArgumentException("Answer not found")).when(answerService).delete(anyLong());
+
+        ResponseEntity<Void> response = answerController.deleteAnswer(1L);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(answerService, times(1)).delete(anyLong());
+    }
+
 }

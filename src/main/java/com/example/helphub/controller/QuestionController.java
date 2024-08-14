@@ -25,10 +25,10 @@ public class QuestionController {
         return questionService.findById(id);
     }
 
-    @GetMapping("/user/{userId}")
-    public List<QuestionDTO> getQuestionsByUserId(@PathVariable Long userId) {
-        return questionService.findByUserId(userId);
-    }
+//    @GetMapping("/user/{userId}")
+//    public List<QuestionDTO> getQuestionsByUserId(@PathVariable Long userId) {
+//        return questionService.findByUserId(userId);
+//    }
 
     @PostMapping
     public QuestionDTO createQuestion(@Valid @RequestBody QuestionDTO questionDTO) {

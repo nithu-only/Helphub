@@ -63,13 +63,25 @@ public class CommentService {
     }
 
     public CommentDTO update(Long id, CommentDTO commentDTO) {
-        Comment comment = commentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Comment not found with id " + id));
+        // Find the existing comment
+        Comment existingComment = commentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
 
-        BeanUtils.copyProperties(commentDTO, comment, "id", "user", "answer", "createdAt");
-        Comment updatedComment = commentRepository.save(comment);
-        return convertToDTO(updatedComment);
+        // Update the existing comment's properties
+        existingComment.setContent(commentDTO.getContent());
+
+        // Save the updated comment back to the repository
+        Comment savedComment = commentRepository.save(existingComment);
+
+        // Convert the updated entity back to DTO
+        CommentDTO updatedCommentDTO = new CommentDTO();
+        updatedCommentDTO.setId(savedComment.getId());
+        updatedCommentDTO.setContent(savedComment.getContent());
+        // Set other properties as needed
+
+        return updatedCommentDTO;
     }
+
 
     public void delete(Long id) {
         Comment comment = commentRepository.findById(id)

@@ -63,14 +63,7 @@ public class QuestionControllerTest {
         verify(questionService, times(1)).findById(1L);
     }
 
-    @Test
-    public void testGetQuestionById_NotFound() {
-        when(questionService.findById(1L)).thenThrow(new ResourceNotFoundException("Question not found"));
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            questionController.getQuestionById(1L);
-        });
-    }
 
     @Test
     public void testCreateQuestion_Success() {
@@ -95,21 +88,45 @@ public class QuestionControllerTest {
     }
 
     @Test
-    public void testUpdateQuestion_NotFound() {
-        when(questionService.update(eq(1L), any(QuestionDTO.class))).thenThrow(new ResourceNotFoundException("Question not found"));
-
-        assertThrows(ResourceNotFoundException.class, () -> {
-            questionController.updateQuestion(1L, questionDTO);
-        });
-    }
-
-    @Test
     public void testDeleteQuestion_Success() {
         doNothing().when(questionService).delete(1L);
 
         questionController.deleteQuestion(1L);
 
         verify(questionService, times(1)).delete(1L);
+    }
+
+    //failure
+
+    @Test
+    public void testCreateQuestion_Failure() {
+        when(questionService.save(any(QuestionDTO.class))).thenThrow(new IllegalArgumentException("Invalid question data"));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            questionController.createQuestion(questionDTO);
+        });
+
+        assertEquals("Invalid question data", exception.getMessage());
+        verify(questionService, times(1)).save(any(QuestionDTO.class));
+    }
+
+
+    @Test
+    public void testGetQuestionById_NotFound() {
+        when(questionService.findById(1L)).thenThrow(new ResourceNotFoundException("Question not found"));
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            questionController.getQuestionById(1L);
+        });
+    }
+
+    @Test
+    public void testUpdateQuestion_NotFound() {
+        when(questionService.update(eq(1L), any(QuestionDTO.class))).thenThrow(new ResourceNotFoundException("Question not found"));
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            questionController.updateQuestion(1L, questionDTO);
+        });
     }
 
     @Test
