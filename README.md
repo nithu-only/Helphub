@@ -11,13 +11,14 @@ Helphub is a web application designed to connect individuals seeking help with t
 - Secure API endpoints.
 - Data storage with MySQL.
 - Tested with Postman for comprehensive API validation.
+- Unit and integration tests using Mockito and JUnit.
 
 ## Tech Stack
 
 - **Backend:** Java Spring Boot
 - **Database:** MySQL
 - **Security:** Spring Security
-- **Testing:** Postman
+- **Testing:** Postman, Mockito, JUnit
 
 ## Getting Started
 
@@ -70,12 +71,23 @@ Helphub is a web application designed to connect individuals seeking help with t
 
 The API is documented using Swagger. Once the application is running, you can access the API documentation at:
 
+```
 http://localhost:8080/swagger-ui.html
+```
 
+### Testing
 
-### Testing with Postman
+#### Postman
 
 A Postman collection is included in the repository. Import `Helphub.postman_collection.json` into Postman to test the API endpoints.
+
+#### Unit and Integration Tests
+
+The project includes unit and integration tests using Mockito and JUnit. To run the tests, use the following command:
+
+```bash
+mvn test
+```
 
 ## Security
 
